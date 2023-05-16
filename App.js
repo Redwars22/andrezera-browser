@@ -12,7 +12,7 @@ export default function App() {
 
   return (
     <>
-      <StatusBar barStyle={'default'} />
+      <StatusBar barStyle={'dark-content'} />
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{

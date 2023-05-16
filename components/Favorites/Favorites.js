@@ -49,7 +49,7 @@ export default function Favorites({ navigation, route }) {
           marginBottom: 10,
         }}>
         <Pressable
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('Settings')}
           style={{
             marginRight: 10,
           }}>
@@ -73,7 +73,9 @@ export default function Favorites({ navigation, route }) {
           marginBottom: 1,
         }}
       />
-      <ScrollView>
+      <ScrollView  style={{
+        maxHeight: (Dimensions.get('window').height - 100) * 0.85
+      }}>
         {favorites?.reverse().map((item) => (
           <Card
             style={{
@@ -94,6 +96,7 @@ export default function Favorites({ navigation, route }) {
               <Text
                 style={{
                   color: !isDarkMode ? '#000' : '#fff',
+                  flex: 1
                 }}>
                 {item.url}
               </Text>

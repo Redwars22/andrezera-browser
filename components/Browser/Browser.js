@@ -7,6 +7,7 @@ import {
   Pressable,
   Dimensions,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import Constants from 'expo-constants';
 import { WebView } from 'react-native-webview';
@@ -18,12 +19,16 @@ import { isDarkTheme, setDarkMode } from '../../modules/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import { addFavorites } from '../../modules/favorites';
 import { addToHistory } from '../../modules/history';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function AndrezeraBrowser({ navigation, route }) {
   const [url, setUrl] = useState('https://www.google.com');
   const [currentURL, setCurrentURL] = useState('');
   const [safeWebsite, setSafeWebsite] = useState(false);
   const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [scrollPosString, setScrollPosString] = useState('');
 
   useFocusEffect(() => {
     async function theme() {
@@ -50,46 +55,79 @@ export default function AndrezeraBrowser({ navigation, route }) {
     }
   });
 
+  const getBackgroundColor = () => {
+    if (route?.params?.private) return '#29002e';
+
+    if (!isDarkMode) return '#E8E8E8';
+
+    return '#000';
+  };
+
+  const handleScroll = (event) => {
+    const currentScrollPosition = event.nativeEvent.contentOffset.y;
+
+    if (currentScrollPosition > scrollPosition) {
+      setScrollPosString('down');
+    } else {
+      setScrollPosString('up');
+    }
+
+    setScrollPosition(currentScrollPosition);
+  };
+
   return (
     <View
       style={[
         styles.container,
         {
-          backgroundColor: !isDarkMode ? '#E8E8E8' : '#000',
+          backgroundColor: getBackgroundColor(),
         },
       ]}>
-      <View
-        style={{
-          backgroundColor: !isDarkMode ? '#E8E8E8' : '#000',
-          justifyContent: 'space-around',
-          padding: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}>
-        <TextInput
+      {scrollPosString != 'down' && (
+        <View
           style={{
-            backgroundColor: safeWebsite ? '#0fba6d' : '#fff',
-            padding: 8,
-            borderRadius: 10,
-            textAlign: 'center',
-            width: width - 80,
-          }}
-          placeholder="Insira um endereço aqui"
-          value={currentURL}
-          onChangeText={(text) => setCurrentURL(text)}
-          onSubmitEditing={(ev) => setUrl(currentURL)}
-        />
-        <Pressable>
-          <FontAwesome
-            name="refresh"
-            size={24}
-            color="#0A7FEC"
-            onPress={() => {
-              this.webview.reload();
+            backgroundColor: getBackgroundColor(),
+            justifyContent: 'space-around',
+            padding: 5,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+          {route?.params?.private && (
+            <MaterialCommunityIcons
+              name="incognito"
+              size={22}
+              color="white"
+              onPress={() =>
+                ToastAndroid.show(
+                  'Navegação em modo privado',
+                  ToastAndroid.SHORT
+                )
+              }
+            />
+          )}
+          <TextInput
+            style={{
+              backgroundColor: safeWebsite ? '#0fba6d' : '#fff',
+              padding: 3,
+              color: safeWebsite ? '#fff' : '#000',
+              fontWeight: 'bold',
+              borderRadius: 10,
+              textAlign: 'center',
+              width: width - 80,
             }}
+            placeholder="Insira um endereço aqui"
+            value={currentURL}
+            onChangeText={(text) => setCurrentURL(text)}
+            onSubmitEditing={(ev) => setUrl(currentURL)}
           />
-        </Pressable>
-      </View>
+          <Pressable
+            onPress={() => {
+              this?.webview?.reload();
+            }}>
+            <FontAwesome name="refresh" size={18} color="#0A7FEC" />
+          </Pressable>
+        </View>
+      )}
       <WebView
         style={{
           flex: 1,
@@ -101,46 +139,62 @@ export default function AndrezeraBrowser({ navigation, route }) {
             setSafeWebsite(true);
           } else setSafeWebsite(false);
 
-          await addToHistory(currentURL);
+          if (!route?.params?.private) await addToHistory(currentURL);
         }}
         onNavigationStateChange={(ev) => {
           setCurrentURL(ev.url);
         }}
+        onScroll={handleScroll}
       />
-      <View
-        style={{
-          backgroundColor: !isDarkMode ? '#E8E8E8' : '#000',
-          justifyContent: 'space-evenly',
-          alignItems: 'center',
-          padding: 12,
-          flexDirection: 'row',
-        }}>
-        <Pressable onPress={() => this.webview.goBack()}>
-          <Entypo name="chevron-left" size={30} color="#0A7FEC" />
-        </Pressable>
-        <Pressable onPress={() => this.webview.goForward()}>
-          <Entypo name="chevron-right" size={30} color="#0A7FEC" />
-        </Pressable>
-        <Pressable
-          onPress={() =>
-            this.webview.injectJavaScript(
-              `window.location = "https://www.google.com"`
-            )
-          }>
-          <AntDesign name="home" size={24} color="#0A7FEC" />
-        </Pressable>
-        <Pressable onPress={async () => await addFavorites(currentURL)}>
-          <AntDesign name="staro" size={24} color="#0A7FEC" />
-        </Pressable>
-        <Pressable>
-          <Feather
-            name="settings"
-            size={24}
-            color="#0A7FEC"
-            onPress={() => navigation.navigate('Settings')}
-          />
-        </Pressable>
-      </View>
+      {scrollPosString != 'down' && (
+        <View
+          style={{
+            backgroundColor: getBackgroundColor(),
+            justifyContent: 'space-evenly',
+            alignItems: 'center',
+            padding: 12,
+            flexDirection: 'row',
+          }}>
+          <Pressable onPress={() => this.webview?.goBack()}>
+            <Entypo name="chevron-left" size={20} color="#0A7FEC" />
+          </Pressable>
+          <Pressable onPress={() => this.webview?.goForward()}>
+            <Entypo name="chevron-right" size={20} color="#0A7FEC" />
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              this.webview?.injectJavaScript(
+                `window.location = "https://www.google.com"`
+              )
+            }>
+            <AntDesign name="home" size={20} color="#0A7FEC" />
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              this.webview?.injectJavaScript(
+                `window.location = "https://chat.openai.com/"`
+              )
+            }>
+            <MaterialIcons name="chat" size={20} color="#0A7FEC" />
+          </Pressable>
+          <Pressable
+            onPress={async () => {
+              if (route?.params?.private) {
+                ToastAndroid.show(
+                  'Não é possível favoritar sites no modo privado',
+                  ToastAndroid.SHORT
+                );
+                return;
+              }
+              await addFavorites(currentURL);
+            }}>
+            <AntDesign name="staro" size={20} color="#0A7FEC" />
+          </Pressable>
+          <Pressable onPress={() => navigation.navigate('Settings')}>
+            <Feather name="settings" size={20} color="#0A7FEC" />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -148,6 +202,5 @@ export default function AndrezeraBrowser({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Constants.statusBarHeight,
   },
 });

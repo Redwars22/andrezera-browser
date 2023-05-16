@@ -13,7 +13,7 @@ import { Card, Switch } from 'react-native-paper';
 import { isDarkTheme, setDarkMode } from '../../modules/theme';
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
-import { retrieveHistory, clearHistory } from '../../modules/history';
+import { retrieveHistory, clearHistory, removeItem } from '../../modules/history';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function History({ navigation }) {
@@ -50,7 +50,7 @@ export default function History({ navigation }) {
           marginBottom: 10,
         }}>
         <Pressable
-          onPress={() => navigation.navigate('Home')}
+          onPress={() => navigation.navigate('Settings')}
           style={{
             marginRight: 10,
           }}>
@@ -106,7 +106,9 @@ export default function History({ navigation }) {
           </Card>
         </Pressable>
       </View>
-      <ScrollView>
+      <ScrollView style={{
+        maxHeight: (Dimensions.get('window').height - 100) * 0.85
+      }}>
         {history?.reverse().map((item) => (
           <Card
             style={{
@@ -127,6 +129,7 @@ export default function History({ navigation }) {
               <Text
                 style={{
                   color: !isDarkMode ? '#000' : '#fff',
+                  flex: 1
                 }}>
                 {item}
               </Text>
@@ -146,6 +149,14 @@ export default function History({ navigation }) {
                       url: item,
                     })
                   }
+                />
+                <Feather
+                  name="trash"
+                  size={24}
+                  color="#0A7FEC"
+                  onPress={async () => {
+                    await removeItem(item);
+                  }}
                 />
               </View>
             </View>
